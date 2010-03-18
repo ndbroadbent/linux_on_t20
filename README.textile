@@ -1,5 +1,7 @@
 h1. Linux on Compaq T20
 
+h4. I am developing on Ubuntu 9.10. YMMV with other distros
+
 * See "project on google docs":http://docs.google.com/View?id=dcfcvm9s_23gs32zshc
 
 * See "Karl Mowatt-Wilson's original tutorial":http://mowson.org/karl/evo_t20/
