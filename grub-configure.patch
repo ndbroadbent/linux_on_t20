@@ -1,0 +1,29 @@
+diff -crB grub-0.97/configure grub-0.97-patched/configure
+*** grub-0.97/configure	2005-05-08 14:48:12.000000000 +1200
+--- grub-0.97-patched/configure	2010-03-18 12:58:33.000000000 +1300
+***************
+*** 3931,3941 ****
+
+  echo "$as_me:$LINENO: result: $grub_cv_prog_objcopy_absolute" >&5
+  echo "${ECHO_T}$grub_cv_prog_objcopy_absolute" >&6
+! if test "x$grub_cv_prog_objcopy_absolute" != xyes; then
+!   { { echo "$as_me:$LINENO: error: GRUB requires a working absolute objcopy; upgrade your binutils" >&5
+! echo "$as_me: error: GRUB requires a working absolute objcopy; upgrade your binutils" >&2;}
+!    { (exit 1); exit 1; }; }
+! fi
+
+
+  echo "$as_me:$LINENO: checking whether addr32 must be in the same line as the instruction" >&5
+--- 3931,3941 ----
+
+  echo "$as_me:$LINENO: result: $grub_cv_prog_objcopy_absolute" >&5
+  echo "${ECHO_T}$grub_cv_prog_objcopy_absolute" >&6
+! #if test "x$grub_cv_prog_objcopy_absolute" != xyes; then
+! #  { { echo "$as_me:$LINENO: error: GRUB requires a working absolute objcopy; upgrade your binutils" >&5
+! #echo "$as_me: error: GRUB requires a working absolute objcopy; upgrade your binutils" >&2;}
+! #   { (exit 1); exit 1; }; }
+! #fi
+
+
+  echo "$as_me:$LINENO: checking whether addr32 must be in the same line as the instruction" >&5
+

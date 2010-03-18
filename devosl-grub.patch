@@ -1,0 +1,185 @@
+diff -ruN grub-0.97/config-devosl.sh grub-0.97-DEvoSL/config-devosl.sh
+--- grub-0.97/config-devosl.sh	1970-01-01 12:00:00.000000000 +1200
++++ grub-0.97-DEvoSL/config-devosl.sh	2007-04-23 16:53:18.000000000 +1200
+@@ -0,0 +1,16 @@
++#! /bin/sh
++MENU="presetmenu-DEvoSL"
++[ "$1" ] && MENU="$1"
++./configure --disable-md5-password          \
++            --disable-ext2fs                \
++            --disable-ffs                   \
++            --disable-ufs2                  \
++            --disable-minix                 \
++            --disable-reiserfs              \
++            --disable-vstatfs               \
++            --disable-jfs                   \
++            --disable-xfs                   \
++            --disable-iso9660               \
++            --disable-serial                \
++            --enable-pci-direct             \
++            --enable-preset-menu="$MENU"
+diff -ruN grub-0.97/presetmenu-DEvoSL grub-0.97-DEvoSL/presetmenu-DEvoSL
+--- grub-0.97/presetmenu-DEvoSL	1970-01-01 12:00:00.000000000 +1200
++++ grub-0.97-DEvoSL/presetmenu-DEvoSL	2007-04-23 16:52:50.000000000 +1200
+@@ -0,0 +1,7 @@
++default 0
++timeout 0
++
++title DEvoSL
++root (hd0,0)
++kernel /linux24 ramdisk_size=100000 init=/etc/init host=DEvoSL nopcmcia noswap
++initrd /minirt24.gz
+diff -ruN grub-0.97/stage1/stage1.S grub-0.97-DEvoSL/stage1/stage1.S
+--- grub-0.97/stage1/stage1.S	2005-02-16 10:54:31.000000000 +1300
++++ grub-0.97-DEvoSL/stage1/stage1.S	2007-04-23 17:04:48.000000000 +1200
+@@ -91,13 +91,13 @@
+ stage1_version:	
+ 	.byte	COMPAT_VERSION_MAJOR, COMPAT_VERSION_MINOR
+ boot_drive:	
+-	.byte	GRUB_INVALID_DRIVE	/* the disk to load stage2 from */
++	.byte	0x80	/* the disk to load stage2 from */
+ force_lba:
+ 	.byte	0
+ stage2_address:
+ 	.word	0x8000
+ stage2_sector:
+-	.long	1
++	.long	2
+ stage2_segment:
+ 	.word	0x800
+ 
+diff -ruN grub-0.97/stage2/asm.S grub-0.97-DEvoSL/stage2/asm.S
+--- grub-0.97/stage2/asm.S	2004-06-20 04:55:22.000000000 +1200
++++ grub-0.97-DEvoSL/stage2/asm.S	2007-04-23 17:04:48.000000000 +1200
+@@ -1611,91 +1611,6 @@
+ 	ret
+ 
+ 		
+-/*
+- * gateA20(int linear)
+- *
+- * Gate address-line 20 for high memory.
+- *
+- * This routine is probably overconservative in what it does, but so what?
+- *
+- * It also eats any keystrokes in the keyboard buffer.  :-(
+- */
+-
+-ENTRY(gateA20)
+-	/* first, try a BIOS call */
+-	pushl	%ebp
+-	movl	8(%esp), %edx
+-	
+-	call	EXT_C(prot_to_real)
+-	
+-	.code16
+-	movw	$0x2400, %ax
+-	testw	%dx, %dx
+-	jz	1f
+-	incw	%ax
+-1:	stc
+-	int	$0x15
+-	jnc	2f
+-
+-	/* set non-zero if failed */
+-	movb	$1, %ah
+-
+-	/* save the status */
+-2:	movb	%ah, %dl
+-
+-	DATA32	call	EXT_C(real_to_prot)
+-	.code32
+-
+-	popl	%ebp
+-	testb	%dl, %dl
+-	jnz	3f
+-	ret
+-
+-3:	/* use keyboard controller */
+-	pushl	%eax
+-
+-	call    gloop1
+-
+-	movb	$KC_CMD_WOUT, %al
+-	outb	$K_CMD
+-
+-gloopint1:
+-	inb	$K_STATUS
+-	andb	$K_IBUF_FUL, %al
+-	jnz	gloopint1
+-
+-	movb	$KB_OUTPUT_MASK, %al
+-	cmpb	$0, 0x8(%esp)
+-	jz	gdoit
+-
+-	orb	$KB_A20_ENABLE, %al
+-gdoit:
+-	outb	$K_RDWR
+-
+-	call	gloop1
+-
+-	/* output a dummy command (USB keyboard hack) */
+-	movb	$0xff, %al
+-	outb	$K_CMD
+-	call	gloop1
+-	
+-	popl	%eax
+-	ret
+-
+-gloop1:
+-	inb	$K_STATUS
+-	andb	$K_IBUF_FUL, %al
+-	jnz	gloop1
+-
+-gloop2:
+-	inb	$K_STATUS
+-	andb	$K_OBUF_FUL, %al
+-	jz	gloop2ret
+-	inb	$K_RDWR
+-	jmp	gloop2
+-
+-gloop2ret:
+-	ret
+ 
+ 
+ ENTRY(patch_code)	/* labels start with "pc_" */
+diff -ruN grub-0.97/stage2/builtins.c grub-0.97-DEvoSL/stage2/builtins.c
+--- grub-0.97/stage2/builtins.c	2005-02-16 10:58:23.000000000 +1300
++++ grub-0.97-DEvoSL/stage2/builtins.c	2007-04-23 17:04:48.000000000 +1200
+@@ -291,7 +291,6 @@
+ 	  set_int13_handler (bios_drive_map);
+ 	}
+       
+-      gateA20 (0);
+       boot_drive = saved_drive;
+       chain_stage1 (0, BOOTSEC_LOCATION, boot_part_addr);
+       break;
+diff -ruN grub-0.97/stage2/common.c grub-0.97-DEvoSL/stage2/common.c
+--- grub-0.97/stage2/common.c	2004-03-28 04:25:44.000000000 +1200
++++ grub-0.97-DEvoSL/stage2/common.c	2007-04-23 17:04:48.000000000 +1200
+@@ -154,13 +154,6 @@
+   mbi.mem_upper = get_memsize (1);
+ 
+ #ifndef STAGE1_5
+-  /*
+-   *  We need to call this somewhere before trying to put data
+-   *  above 1 MB, since without calling it, address line 20 will be wired
+-   *  to 0.  Not too desirable.
+-   */
+-
+-  gateA20 (1);
+ 
+   /* Store the size of extended memory in EXTENDED_MEMORY, in order to
+      tell it to non-Multiboot OSes.  */
+diff -ruN grub-0.97/stage2/start.S grub-0.97-DEvoSL/stage2/start.S
+--- grub-0.97/stage2/start.S	2003-07-09 23:45:53.000000000 +1200
++++ grub-0.97-DEvoSL/stage2/start.S	2007-04-23 17:04:48.000000000 +1200
+@@ -389,7 +389,7 @@
+ 	
+         /* fill the first data listing with the default */
+ blocklist_default_start:
+-	.long 2		/* this is the sector start parameter, in logical
++	.long 3		/* this is the sector start parameter, in logical
+ 			   sectors from the start of the disk, sector 0 */
+ blocklist_default_len:
+ 			/* this is the number of sectors to read */

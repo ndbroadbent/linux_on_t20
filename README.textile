@@ -1,0 +1,11 @@
+h1. Linux on Compaq T20
+
+* See http://docs.google.com/View?id=dcfcvm9s_23gs32zshc for current progress.
+
+* See http://mowson.org/karl/evo_t20/ for the original tutorial.
+
+* To be able to run 'automated_build.sh', you will need to separately download and extract a copy of the WinNT flash image for an Evo 96/128 (U96CPQ163.bin) to the repo folder.
+* (If you need a different version, the scripts will still work, and are not hard to change.)
+** Download the 96/128 flash image from:
+*** http://h20000.www2.hp.com/bizsupport/TechSupport/SoftwareDescription.jsp?lang=en&cc=US&swItem=PSG_I16456-39007&prodTypeId=0&prodSeriesId=96470
+
